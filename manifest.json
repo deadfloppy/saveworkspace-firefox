@@ -1,0 +1,34 @@
+{
+
+  "manifest_version": 2,
+  "name": "SaveWorkspace4Firefox",
+  "version": "1.0",
+
+  "description": "Adds save/load tab current layout functionality",
+  
+  "icons": {
+    "32": "icon-gigachad-32.png",
+    "48": "icon-gigachad-48.png"
+  },
+  
+  "permissions": [
+    "<all_urls>",
+    "activeTab",
+    "tabs",
+    "storage",
+    "scripting"
+  ],
+
+  "browser_action": {
+    "default_icon": "icons-gigachad-32.png",
+    "default_title": "SaveWorkspace4Firefox",
+    "default_popup": "sw4f.html"
+  },
+
+  "content_scripts": [
+    {
+      "matches": ["*://*.mozilla.org/*"],
+      "js": ["sw4f.js"]
+    }
+  ]
+}
