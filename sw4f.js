@@ -6,47 +6,74 @@
  *  Please visit "opensource.org/licenses/MIT" for a copy.
  */
 
-function getAllTabs() {
-    return browser.tabs.query({currentWindow: true});
+/* DEBUG FUNCTION */
+ function download(data, filename) {
+    var file = new Blob([data]);
+    if (window.navigator.msSaveOrOpenBlob) // IE10+
+        window.navigator.msSaveOrOpenBlob(file, filename);
+    else { // Others
+        var a = document.createElement("a"),
+                url = URL.createObjectURL(file);
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(function() {
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);  
+        }, 0); 
+    }
 }
 
-/* Save current tabs into memory */
-function saveWorkspace(tabArray) {
-
-    let tabList = [];
-    var counter = 0;
-    for (tab of tabArray) {
+/*
+    Collect all tabs into a JSON object and return it
+    */
+   function retrieveTabs(tabArray) {
+       
+       let tabList = [];
+       var counter = 0;
+       for (let tab of tabArray) {
+           
+           let tabUnit = {
+               title: tab.title,
+               url: tab.url
+            };
+            
+            /*document.getElementById("elements-inside").innerHTML = tab.title;*/
         
-        let tabUnit = {
-            "title": tab.title,
-            "url": tab.url
-        };
+            tabList.push(tabUnit);
 
-        tabList.push(tabUnit);
-        counter++;
-
-    }
-
-    var tabObject = JSON.stringify(tabList);
-    saveTabs(tabObject);
-    return;
+        }
+    return JSON.stringify(tabList);
 
 }
 
 /*  
     Use textinput field as name,
-    Parse tabs' name, url, into a JSON object,
-    Parse name, time, date into the same JSON object,
+    Take tab content object from retrieveTabs()
+    Set metadata (save file name and date&time)
     Save JSON object into localStorage
-*/
-function saveTabs(content) {
-    let saveName = document.getElementById("textfield");
-    if (saveName === "") { 
-        /* In case there is no input in textinput field,
-            use a sample name. Ideally, this should be handled properly */
-        let saveName = "Workspace save file";      
-    }
-    browser.storage.local.set({[saveName] : content});
+    */
+   function saveTabs() {
+       console.log("[SW4F] saveTabs() called");
+       
+       let saveName = document.getElementById("textfield").value;
+       if (saveName === "") { 
+           /* In case there is no input in textinput field,
+           use a sample name. Ideally, this should be handled properly
+           TODO: fix naming handling */
+           let saveName = "Workspace save file";      
+        }
+        let saveDate = 0;
+        let content = browser.tabs.query({currentWindow: true}).then(retrieveTabs);
+        document.getElementById("elements-inside").innerHTML = content;
+        let saveObject = {name: saveName, date: saveDate, content: content}
+        browser.storage.local.set({[saveName] : saveObject});
+        updateList();
+        
+        /* DEBUG */
+    let stringObj = JSON.stringify(saveObject);
+    /*download(stringObj, "debugFile.json");*/
     return;
 }
 
@@ -61,6 +88,7 @@ function loadTabs() {
     var saveName = "Save: " + date.toLocaleDateString();
     let data = browser.storage.local.get(saveName)
     .then(JSON.stringify);
+    updateList();
     return data;
 }
 
@@ -71,42 +99,17 @@ function loadTabs() {
 */
 function removeTabs(name) {
     let data = browser.storage.local.remove(name);
+    updateList();
     return data;
 }
 
-function doshit(bruh) {
-    var label = document.getElementById("workspace-element");
-    label.innerHTML = bruh;
+/*
+    Update the save files list upon any change
+    TODO: finish this
+*/
+function updateList() {
     return;
 }
 
-function onError(error) {
-    doshit(error);
-    return;
-}
-
-/**
- *  First function to be run.
- *  Loads the workspace list from memory and sets up the interface
- */
-function initialize() {
-    var raw_prevStoredData = browser.storage.local.get(null)
-    .then(JSON.stringify);
-
-    return;
-}
-
-console.log("[SW4F] sw4f.js started running...");
-var data = getAllTabs().then(saveWorkspace);
-saveTabs(data);
-let pp = loadTabs();
-pp.then(doshit);
-
-/* Connecting UI to script */
-let loadButton = document.getElementById("loadbutton").onclick;
-loadButton = {} => {
-    return;
-};
-
-document.getElementById("savebutton").onclick = saveTabs();
-
+/* DEBUG */
+document.getElementById("savebutton").onclick = saveTabs;
