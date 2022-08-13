@@ -14,11 +14,15 @@
     </div>
 
     <div id="elements">
-        <div class="workspace-empty-element">No saved workspaces</div>
+      <div id="elements-inside">
+        <div class="workspace-empty-element">
+          <p id="workspace-element">No saved workspaces</p>
+        </div>
+      </div>
     </div>
     
     <div id="loadbutton-block">
-        <button id="loadbutton" type="button">Load</button>
+        <button id="loadbutton" type="button" onclick="loadTabs();">Load</button>
     </div>
     
     <div id="toolbar-textfield-block">
@@ -26,7 +30,7 @@
     </div>
 
     <div id="toolbar-savebutton-block">
-        <button id="savebutton" type="button">Save</button>
+        <button id="savebutton" type="button" onclick="saveTabs();">Save</button>
     </div>            
 
     <div class="footer">
@@ -34,11 +38,7 @@
     </div>
 
   </div>
-
-  <div id="error-content" class="hidden">
-    <p>Some error happened! :(</p>
-  </div>
-  <script src="swf4.js"></script>
+  <script src="sw4f.js"></script>
 </body>
 
 </html>

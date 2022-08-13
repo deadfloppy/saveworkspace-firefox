@@ -50,6 +50,7 @@ div {
 }
 
 #elements {
+    display: table;
     grid-area: elements;
     text-align: center;
     vertical-align: middle;
@@ -57,6 +58,12 @@ div {
     font-weight: bold;
     background-color: #41414b;
     border: 3px solid rgb(131, 131, 255);
+}
+
+#elements-inside {
+    display: table-cell;
+    vertical-align: middle;
+
 }
 
 #loadbutton-block {

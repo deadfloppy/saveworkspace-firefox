@@ -6,23 +6,83 @@
  *  Please visit "opensource.org/licenses/MIT" for a copy.
  */
 
+function getAllTabs() {
+    return browser.tabs.query({currentWindow: true});
+}
+
 /* Save current tabs into memory */
-function saveWorkspace() {
+function saveWorkspace(tabArray) {
+
+    let tabList = [];
+    var counter = 0;
+    for (tab of tabArray) {
+        
+        let tabUnit = {
+            "title": tab.title,
+            "url": tab.url
+        };
+
+        tabList.push(tabUnit);
+        counter++;
+
+    }
+
+    var tabObject = JSON.stringify(tabList);
+    saveTabs(tabObject);
+    return;
+
+}
+
+/*  
+    Use textinput field as name,
+    Parse tabs' name, url, into a JSON object,
+    Parse name, time, date into the same JSON object,
+    Save JSON object into localStorage
+*/
+function saveTabs(content) {
+    let saveName = document.getElementById("textfield");
+    if (saveName === "") { 
+        /* In case there is no input in textinput field,
+            use a sample name. Ideally, this should be handled properly */
+        let saveName = "Workspace save file";      
+    }
+    browser.storage.local.set({[saveName] : content});
     return;
 }
-/* Load a workspace from memory into current browser window*/
-function loadWorkspace(workspace) {
-    return;
+
+/*
+    Use selection from list as name for save file,
+    Load save file from JSON storage,
+    Load tabs one by one,
+    Keep save file in localStorage
+*/
+function loadTabs() {
+    var date = new Date();
+    var saveName = "Save: " + date.toLocaleDateString();
+    let data = browser.storage.local.get(saveName)
+    .then(JSON.stringify);
+    return data;
+}
+
+/*
+    Use selection from list as save file name,
+    Delete it from localStorage,
+    Update selection list
+*/
+function removeTabs(name) {
+    let data = browser.storage.local.remove(name);
+    return data;
 }
 
 function doshit(bruh) {
-    for (let tab of bruh) {
-        console.log(tab.url);
-    }
+    var label = document.getElementById("workspace-element");
+    label.innerHTML = bruh;
+    return;
 }
 
 function onError(error) {
-    console.log(`[ERROR] ${error}`);
+    doshit(error);
+    return;
 }
 
 /**
@@ -30,18 +90,23 @@ function onError(error) {
  *  Loads the workspace list from memory and sets up the interface
  */
 function initialize() {
-    console.log("[SW4F] Initalizing...");
-    
-    
+    var raw_prevStoredData = browser.storage.local.get(null)
+    .then(JSON.stringify);
+
     return;
-    
 }
 
+console.log("[SW4F] sw4f.js started running...");
+var data = getAllTabs().then(saveWorkspace);
+saveTabs(data);
+let pp = loadTabs();
+pp.then(doshit);
 
-initialize();
-browser.tabs.query({currentWindow:true})
-.then((tabs) => {
-    for (let tab in tabs) {
-        console.log(tab.url);
-    }
-});
+/* Connecting UI to script */
+let loadButton = document.getElementById("loadbutton").onclick;
+loadButton = {} => {
+    return;
+};
+
+document.getElementById("savebutton").onclick = saveTabs();
+
