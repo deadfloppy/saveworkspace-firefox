@@ -6,8 +6,15 @@
  *  Please visit "opensource.org/licenses/MIT" for a copy.
  */
 
+let debugMode = false;
+
 /* DEBUG FUNCTION */
  function download(data, filename) {
+
+    if (debugMode === false) {
+        return;
+    }
+
     var file = new Blob([data]);
     if (window.navigator.msSaveOrOpenBlob) // IE10+
         window.navigator.msSaveOrOpenBlob(file, filename);
@@ -28,11 +35,12 @@
 /*
     Collect all tabs into a JSON object and return it
     */
-   function retrieveTabs(tabArray) {
+    async function packageTabs() {
        
-       let tabList = [];
-       var counter = 0;
-       for (let tab of tabArray) {
+        let tabArray = await browser.tabs.query({currentWindow: true});
+        let tabList = [];
+        var counter = 0;
+        for (let tab of tabArray) {
            
            let tabUnit = {
                title: tab.title,
@@ -44,7 +52,7 @@
             tabList.push(tabUnit);
 
         }
-    return JSON.stringify(tabList);
+    return tabList;
 
 }
 
@@ -54,7 +62,7 @@
     Set metadata (save file name and date&time)
     Save JSON object into localStorage
     */
-   function saveTabs() {
+   async function saveTabs() {
        console.log("[SW4F] saveTabs() called");
        
        let saveName = document.getElementById("textfield").value;
@@ -64,16 +72,29 @@
            TODO: fix naming handling */
            let saveName = "Workspace save file";      
         }
-        let saveDate = 0;
-        let content = browser.tabs.query({currentWindow: true}).then(retrieveTabs);
-        document.getElementById("elements-inside").innerHTML = content;
+        let saveDate = new Date().toLocaleDateString();
+        let content = await packageTabs();
         let saveObject = {name: saveName, date: saveDate, content: content}
-        browser.storage.local.set({[saveName] : saveObject});
+        browser.storage.local.set({[saveName] : saveObject}); /* Save the workspace itself */
+        
+        /* Try getting the save file list. If not, throw an error */
+        /*try {*/
+            document.getElementById("footer-text-box").innerHTML = "Starting";
+            let saveFileList = await browser.storage.local.get("sw4f-list");
+            document.getElementById("footer-text-box").innerHTML = Object.values(saveFileList);
+            
+            document.getElementById("footer-text-box").innerHTML = "Pushed new element into saveFileList";
+            browser.storage.local.set({["sw4f-list"] : JSON.stringify(saveFileList)});
+            document.getElementById("footer-text-box").innerHTML = "Saved saveFileList into storage";
+        /*}
+        catch(err) {
+            document.getElementById("footer-text-box").innerHTML = "No workspaces found";
+        }*/
         updateList();
         
         /* DEBUG */
     let stringObj = JSON.stringify(saveObject);
-    /*download(stringObj, "debugFile.json");*/
+    download(stringObj, "debugFile.json");
     return;
 }
 
@@ -105,11 +126,29 @@ function removeTabs(name) {
 
 /*
     Update the save files list upon any change
-    TODO: finish this
+    SW4F saves all save file names in local storage,
+    as a way to bypass limitations of browser.storage API
 */
-function updateList() {
+async function updateList() {
+
+    let saveFilesList = await browser.storage.local.get("sw4f-list");
+
+    /* Go through every save file name in saveFilesList and create a list element for every one */
+    document.getElementById("elements-inside").innerHTML = "<div id=\"elements-list\"> <form action=\"#\"> <select name=\"saveFiles\" id=\"save-file-list\" size=\"4\"> </select> </form> </div>"
+    document.getElementById("elements-inside").innerHTML = JSON.stringify(saveFilesList);
+    for (let item of saveFilesList) {
+        document.getElementById("save-file-list").innerHTML += `<option value=${item}>${item}</option>`
+    }
     return;
 }
 
 /* DEBUG */
 document.getElementById("savebutton").onclick = saveTabs;
+
+try {
+    let saveFileList = JSON.parse(browser.storage.local.get("sw4f-list"));
+}
+catch(err) {
+    /*alert("No save file list found in local storage!")*/
+    browser.storage.local.set({["sw4f-list"] : "empty"});
+}
