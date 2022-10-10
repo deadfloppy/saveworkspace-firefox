@@ -70,7 +70,7 @@ let debugMode = false;
            /* In case there is no input in textinput field,
            use a sample name. Ideally, this should be handled properly
            TODO: fix naming handling */
-           let saveName = "Workspace save file";      
+           saveName = "Workspace save file";      
         }
         let saveDate = new Date().toLocaleDateString();
         let content = await packageTabs();

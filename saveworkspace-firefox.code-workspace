@@ -1,0 +1,11 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"path": "../webextensions-examples/list-cookies"
+		}
+	],
+	"settings": {}
+}
